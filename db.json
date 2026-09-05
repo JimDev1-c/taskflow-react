@@ -1,0 +1,170 @@
+{
+  "utilisateurs": [
+    {
+      "id": 1,
+      "nom": "jephte Iniki",
+      "email": "inikijephte5@gmail.com",
+      "motDePasse": "123456"
+    }
+  ],
+  "projets": [
+    {
+      "id": 1,
+      "utilisateurId": 1,
+      "nom": "Refonte Site Web",
+      "description": "Création du nouveau site vitrine institutionnel.",
+      "couleur": "#21C7A5",
+      "creeLe": "2026-09-01"
+    },
+    {
+      "id": 2,
+      "utilisateurId": 1,
+      "nom": "Application Mobile",
+      "description": "Développement du MVP de l'application cliente.",
+      "couleur": "#3B82F6",
+      "creeLe": "2026-09-02"
+    },
+    {
+      "id": 3,
+      "utilisateurId": 1,
+      "nom": "Campagne Marketing",
+      "description": "Préparation du lancement sur les réseaux sociaux.",
+      "couleur": "#F59E0B",
+      "creeLe": "2026-09-03"
+    }
+  ],
+  "taches": [
+    {
+      "id": 1,
+      "projetId": 1,
+      "titre": "Concevoir les maquettes Figma",
+      "description": "Créer le design system et les 5 pages principales.",
+      "statut": "terminee",
+      "priorite": "haute",
+      "echeance": "2026-09-05",
+      "creeLe": "2026-09-01",
+      "modifieLe": "2026-09-04"
+    },
+    {
+      "id": 2,
+      "projetId": 1,
+      "titre": "Intégrer le formulaire de contact",
+      "description": "Validation des champs obligatoires et envoi.",
+      "statut": "en_cours",
+      "priorite": "haute",
+      "echeance": "2026-09-12",
+      "creeLe": "2026-09-02",
+      "modifieLe": "2026-09-04"
+    },
+    {
+      "id": 3,
+      "projetId": 1,
+      "titre": "Optimiser le référencement SEO",
+      "description": "Balises meta, opengraph et fichier sitemap.",
+      "statut": "a_faire",
+      "priorite": "moyenne",
+      "echeance": "2026-09-15",
+      "creeLe": "2026-09-03",
+      "modifieLe": "2026-09-03"
+    },
+    {
+      "id": 4,
+      "projetId": 1,
+      "titre": "Tester le responsive mobile",
+      "description": "Vérifier l'affichage sur iOS et Android.",
+      "statut": "a_faire",
+      "priorite": "basse",
+      "echeance": "2026-09-18",
+      "creeLe": "2026-09-03",
+      "modifieLe": "2026-09-03"
+    },
+    {
+      "id": 5,
+      "projetId": 2,
+      "titre": "Configurer l'environnement Flutter",
+      "description": "Installation des SDKs et dépendances.",
+      "statut": "terminee",
+      "priorite": "haute",
+      "echeance": "2026-09-06",
+      "creeLe": "2026-09-02",
+      "modifieLe": "2026-09-03"
+    },
+    {
+      "id": 6,
+      "projetId": 2,
+      "titre": "Créer l'écran d’authentification",
+      "description": "Page de connexion et d'inscription.",
+      "statut": "en_cours",
+      "priorite": "haute",
+      "echeance": "2026-09-10",
+      "creeLe": "2026-09-03",
+      "modifieLe": "2026-09-05"
+    },
+    {
+      "id": 7,
+      "projetId": 2,
+      "titre": "Connecter l'API REST",
+      "description": "Mise en place des requêtes HTTP avec Axios.",
+      "statut": "a_faire",
+      "priorite": "moyenne",
+      "echeance": "2026-09-14",
+      "creeLe": "2026-09-04",
+      "modifieLe": "2026-09-04"
+    },
+    {
+      "id": 8,
+      "projetId": 2,
+      "titre": "Implémenter les notifications push",
+      "description": "Configuration avec Firebase Cloud Messaging.",
+      "statut": "a_faire",
+      "priorite": "basse",
+      "echeance": "2026-09-20",
+      "creeLe": "2026-09-04",
+      "modifieLe": "2026-09-04"
+    },
+    {
+      "id": 9,
+      "projetId": 3,
+      "titre": "Rédiger les visuels des publications",
+      "description": "Créer 10 posts Canva pour LinkedIn.",
+      "statut": "terminee",
+      "priorite": "moyenne",
+      "echeance": "2026-09-07",
+      "creeLe": "2026-09-03",
+      "modifieLe": "2026-09-05"
+    },
+    {
+      "id": 10,
+      "projetId": 3,
+      "titre": "Planifier la diffusion des posts",
+      "description": "Programmation sur Buffer et Hootsuite.",
+      "statut": "en_cours",
+      "priorite": "basse",
+      "echeance": "2026-09-11",
+      "creeLe": "2026-09-04",
+      "modifieLe": "2026-09-05"
+    },
+    {
+      "id": 11,
+      "projetId": 3,
+      "titre": "Lancer la campagne publicitaire",
+      "description": "Configuration des Meta Ads avec budget cible.",
+      "statut": "a_faire",
+      "priorite": "haute",
+      "echeance": "2026-09-16",
+      "creeLe": "2026-09-05",
+      "modifieLe": "2026-09-05"
+    },
+    {
+      "id": 12,
+      "projetId": 3,
+      "titre": "Analyser les statistiques de conversion",
+      "description": "Rapport final sur les clics et leads générés.",
+      "statut": "a_faire",
+      "priorite": "moyenne",
+      "echeance": "2026-09-25",
+      "creeLe": "2026-09-05",
+      "modifieLe": "2026-09-05"
+    }
+  ]
+}
