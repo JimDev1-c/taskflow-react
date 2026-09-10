@@ -2,16 +2,19 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Interroge l'API locale avec les identifiants fournis par le formulaire.
 export const connecterUtilisateur = async (email, motDePasse) => {
-  const parametres = new URLSearchParams({ email, motDePasse });
+  const parametres = new URLSearchParams({ email });
   const reponse = await fetch(`${API_URL}/utilisateurs?${parametres}`);
   if (!reponse.ok) throw new Error("Erreur serveur lors de la connexion");
   
   const utilisateurs = await reponse.json();
-  if (utilisateurs.length === 0) {
+  const utilisateur = utilisateurs.find(
+    (element) => element.motDePasse === motDePasse
+  );
+  if (!utilisateur) {
     throw new Error("E-mail ou mot de passe incorrect");
   }
   
-  return utilisateurs[0]; // Renvoie l'utilisateur trouvé
+  return utilisateur; // Renvoie l'utilisateur trouvé
 };
 
 // Verifie l'unicite de l'e-mail puis cree le nouvel utilisateur.

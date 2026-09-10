@@ -1,28 +1,67 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+
+// Guards & Layouts
 import { RoutePrivee } from "./components/RoutePrivee";
 import { Layout } from "./components/Layout";
+
+// Public Views
 import { Connexion } from "./pages/Connexion";
+import { Inscription } from "./pages/Inscription";
 
-// Composants temporaires pour valider les routes
-const Dashboard = () => <h1>Tableau de bord (Jour 6)</h1>;
-const Projets = () => <h1>Liste des Projets (Jour 3)</h1>;
-const NonTrouve = () => <h1>404 - Page non trouvée</h1>;
+// Protected Views
+import { Dashboard } from "./pages/Dashboard";
+import { Projets } from "./pages/Projets";
+import { DetailProjet } from "./pages/DetailProjet";
 
+// Fallback Views
+import { NonTrouve } from "./pages/NonTrouve";
+
+// Global Stylesheet
+import "./App.css";
+
+/**
+ * Composant racine définissant la carte de routage (Routing Tree) de l'application.
+ * 
+ * Architecture du routage :
+ * - Public : Routes accessibles hors session utilisateur.
+ * - Protégé : Routes restreintes nécessitant une authentification (`RoutePrivee`), 
+ *   partageant la même structure visuelle globale (`Layout`).
+ * - Fallback : Capture des routes non définies (404).
+ * 
+ * @component
+ * @returns {JSX.Element} L'arbre d'itinéraires React Router.
+ */
 export function App() {
   return (
     <Routes>
-      {/* Route accessible sans session utilisateur. */}
+      {/* ========================================== */}
+      {/* 1. ROUTES PUBLIQUES                        */}
+      {/* ========================================== */}
       <Route path="/connexion" element={<Connexion />} />
-      
-      {/* Toutes les routes enfants passent par la protection et le layout commun. */}
-      <Route element={<RoutePrivee><Layout /></RoutePrivee>}>
-        {/* La racine redirige vers l'espace de travail principal. */}
+      <Route path="/inscription" element={<Inscription />} />
+
+      {/* ========================================== */}
+      {/* 2. ENCLAVE PROTÉGÉE (Authentification requise) */}
+      {/* ========================================== */}
+      <Route
+        element={
+          <RoutePrivee>
+            <Layout />
+          </RoutePrivee>
+        }
+      >
+        {/* Redirection explicite du chemin racine vers le tableau de bord */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Vues métier */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/projets" element={<Projets />} />
+        <Route path="/projets/:id" element={<DetailProjet />} />
       </Route>
 
-      {/* Toute URL inconnue arrive ici. */}
+      {/* ========================================== */}
+      {/* 3. GESTION DES ERREURS DE ROUTAGE          */}
+      {/* ========================================== */}
       <Route path="*" element={<NonTrouve />} />
     </Routes>
   );

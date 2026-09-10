@@ -1,184 +1,751 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+/* Palette et dimensions partagees par toute l'application. */
+:root {
+  /* Couleur principale de navigation et des titres. */
+  --navy: #123b46;
+  /* Variante plus claire du bleu principal. */
+  --navy-soft: #1f5960;
+  /* Accent turquoise des actions importantes. */
+  --accent: #f07c5a;
+  /* Accent plus sombre pour les etats actifs. */
+  --accent-dark: #c95b43;
+  /* Fond general de l'espace de travail. */
+  --page: #f7f3ec;
+  /* Fond des surfaces elevees. */
+  --surface: #fffdf8;
+  /* Surface des champs, distincte du fond de la page. */
+  --input-surface: #faf7f0;
+  /* Surface secondaire des en-tetes et zones de filtres. */
+  --surface-soft: #eef3ef;
+  /* Fond des indicateurs de progression. */
+  --track: #d9e4df;
+  /* Texte indicatif des champs. */
+  --placeholder: #7a8c8d;
+  /* Bordures discretes des controles. */
+  --border: #d9e2de;
+  /* Textes secondaires. */
+  --muted: #607275;
+  /* Texte principal. */
+  --text: #17343a;
+  /* Couleur reservee aux erreurs. */
+  --danger: #c44f5a;
+  /* Ombre commune des panneaux. */
+  --shadow: 0 18px 45px rgba(18, 59, 70, 0.1);
+  /* Rayon des grands panneaux. */
+  --radius-lg: 22px;
+  /* Rayon des champs et boutons. */
+  --radius-md: 12px;
 }
 
-.hero {
+/* Evite les debordements en incluant bordures et padding dans les dimensions. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Retire les marges navigateur et garantit une hauteur pleine. */
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+/* Definit la base typographique et le fond global. */
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Harmonise les controles natifs avec la typographie du produit. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Harmonise aussi les controles des pages privees avec le theme actif. */
+input,
+select,
+textarea {
+  color: var(--text);
+  background: var(--input-surface);
+  border-color: var(--border);
+}
+
+/* Donne une couleur coherente aux liens. */
+a {
+  color: var(--accent-dark);
+}
+
+/* Variables surchargees uniquement apres activation explicite du mode sombre. */
+:root[data-theme="dark"] {
+  --page: #10292f;
+  --surface: #17383e;
+  --input-surface: #1d4247;
+  --surface-soft: #204249;
+  --track: #356067;
+  --placeholder: #a5b8b5;
+  --border: #31565c;
+  --muted: #b4c7c2;
+  --text: #f3f7f3;
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
+}
+
+/* Assombrit aussi la zone hors composant lors du changement de theme. */
+:root[data-theme="dark"] body {
+  background: var(--page);
+}
+
+/* Aligne la marque et le bouton de theme dans le panneau gauche. */
+.auth-intro-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+/* Bouton discret et reutilisable pour la bascule clair/sombre. */
+.theme-toggle {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 9px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+/* Rend le bouton visible sans modifier la composition de la page. */
+.theme-toggle:hover {
+  border-color: rgba(240, 124, 90, 0.8);
+  background: rgba(240, 124, 90, 0.16);
+}
+
+/* Espace le bouton de theme de l'action de deconnexion dans la sidebar. */
+.sidebar-theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* Organise l'ecran d'authentification en deux panneaux. */
+.auth-page {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(420px, 1.15fr);
+  min-height: 100vh;
+  background: var(--surface);
+}
+
+/* Cree l'univers visuel de la marque. */
+.auth-intro {
   position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
+  isolation: isolate;
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
+  justify-content: space-between;
+  padding: clamp(32px, 6vw, 88px);
+  color: #ffffff;
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(145deg, rgba(18, 59, 70, 0.96) 0%, rgba(31, 89, 96, 0.82) 58%, rgba(201, 91, 67, 0.72) 100%),
+    url("https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1400&q=85");
+  background-position: center;
+  background-size: cover;
+}
+
+/* Aligne le symbole et le nom de la marque. */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Fournit un marqueur graphique sans dependance externe. */
+.brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
   place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  border-radius: 11px;
+  color: var(--navy);
+  background: var(--accent);
+  font-size: 1.15rem;
+  font-weight: 800;
 }
 
-#next-steps {
+/* Centre verticalement le message de bienvenue. */
+.auth-intro-copy {
+  max-width: 480px;
+  margin-block: auto;
+  padding-block: 72px;
+}
+
+/* Identifie la categorie de l'ecran. */
+.eyebrow {
+  margin: 0 0 18px;
+  color: #ffb08f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Titre principal de l'ecran d'authentification. */
+.auth-intro h1 {
+  max-width: 470px;
+  margin: 0;
+  font-size: clamp(2.2rem, 4vw, 4.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+
+/* Texte d'accompagnement du panneau gauche. */
+.auth-intro p {
+  max-width: 420px;
+  margin: 24px 0 0;
+  color: #d8e5df;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+/* Mention basse du panneau de marque. */
+.auth-intro-footer {
+  margin: 0;
+  color: #b7cbc5;
+  font-size: 0.82rem;
+}
+
+/* Centre le formulaire dans son panneau. */
+.auth-panel {
   display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  align-items: center;
+  justify-content: center;
+  padding: clamp(28px, 7vw, 96px);
+  background: var(--surface);
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+/* Maintient une largeur de lecture confortable. */
+.auth-card {
+  width: min(100%, 430px);
 }
 
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
+/* Titre de la zone de connexion. */
+.auth-card h1,
+.auth-card h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  letter-spacing: -0.035em;
+}
+
+/* Etiquette de contexte reservee au formulaire d'inscription. */
+.auth-form-eyebrow {
+  margin-bottom: 14px;
+  color: var(--accent-dark);
+}
+
+/* Sous-titre du formulaire. */
+.auth-subtitle {
+  margin: 12px 0 34px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Empile les champs et l'action principale. */
+.auth-form {
+  display: grid;
+  gap: 19px;
+}
+
+/* Associe chaque libelle a son champ. */
+.field-group {
+  display: grid;
   gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+/* Rend les libelles facilement scannables. */
+.field-group label {
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
 }
 
-.ticks {
-  position: relative;
+/* Donne une hauteur stable et tactile aux champs. */
+.field-group input {
   width: 100%;
+  min-height: 50px;
+  padding: 0 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  background: var(--input-surface);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+/* Maintient un contraste explicite pour les indications des champs. */
+.field-group input::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+/* Signale le champ actif avec un anneau accessible. */
+.field-group input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(240, 124, 90, 0.18);
+}
+
+/* Encadre les erreurs sans casser la mise en page. */
+.form-error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #f3c5ce;
+  border-radius: var(--radius-md);
+  color: var(--danger);
+  background: #fff5f6;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* Ajuste la surface de l'erreur lorsque le theme sombre est actif. */
+:root[data-theme="dark"] .form-error {
+  border-color: #713c4a;
+  color: #ffb6c1;
+  background: #291c2a;
+}
+
+/* Style de l'action principale. */
+.primary-button {
+  min-height: 52px;
+  margin-top: 5px;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--accent-dark);
+  cursor: pointer;
+  font-weight: 700;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+/* Donne un retour visuel lors du survol. */
+.primary-button:hover:not(:disabled) {
+  background: #ad4d39;
+  box-shadow: 0 10px 20px rgba(201, 91, 67, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Signale qu'une action est temporairement indisponible. */
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+/* Lien secondaire sous le formulaire. */
+.auth-switch {
+  margin: 25px 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+/* Aligne le titre du dashboard et son action principale. */
+.dashboard-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+/* Action principale qui ouvre l'espace de gestion des projets. */
+.dashboard-button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.dashboard-button,
+.button-primary {
+  padding: 0 16px;
+  color: #ffffff;
+  background: var(--accent-dark);
+  box-shadow: 0 8px 16px rgba(201, 91, 67, 0.18);
+}
+
+.dashboard-button:hover,
+.button-primary:hover:not(:disabled) {
+  color: #ffffff;
+  background: #ad4d39;
+  box-shadow: 0 10px 20px rgba(201, 91, 67, 0.28);
+  transform: translateY(-1px);
+}
+
+/* Actions secondaires qui ne doivent pas concurrencer l'action principale. */
+.button-secondary {
+  padding: 0 13px;
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.button-secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+  background: var(--surface-soft);
+}
+
+/* Action destructive facilement identifiable, sans modifier sa logique. */
+.button-danger {
+  padding: 0 13px;
+  color: #ffffff;
+  background: #c24154;
+}
+
+.button-danger:hover:not(:disabled) {
+  color: #ffffff;
+  background: #a83245;
+  box-shadow: 0 8px 16px rgba(194, 65, 84, 0.2);
+}
+
+/* Version compacte pour les actions répétées dans un tableau. */
+.button-compact {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+}
+
+/* Anneau commun pour la navigation clavier sur tous les contrôles interactifs. */
+.dashboard-button:focus-visible,
+.button:focus-visible,
+.sidebar-link:focus-visible,
+.theme-toggle:focus-visible,
+.sidebar-logout:focus-visible {
+  outline: 3px solid rgba(240, 124, 90, 0.9);
+  outline-offset: 3px;
+}
+
+/* Structure de l'application apres authentification. */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Navigation laterale sur grand ecran. */
+.sidebar {
+  display: flex;
+  width: 250px;
+  flex-shrink: 0;
+  flex-direction: column;
+  padding: 28px 20px;
+  color: #ffffff;
+  background: var(--navy);
+}
+
+/* Informations de l'utilisateur connecte. */
+.sidebar-user {
+  margin: 36px 0 0;
+  color: #a9bdd5;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Liste des liens de navigation. */
+.sidebar-nav {
+  display: grid;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+/* Zone cliquable de chaque lien. */
+.sidebar-link {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #c6d5e6;
+  text-decoration: none;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+/* Espace l'icone de navigation du libelle pour faciliter le balayage visuel. */
+.sidebar-link span {
+  display: inline-block;
+  width: 20px;
+  color: var(--accent);
+  text-align: center;
+}
+
+/* Met en avant le lien actif et le survol. */
+.sidebar-link:hover,
+.sidebar-link.active {
+  color: #ffffff;
+  background: rgba(240, 124, 90, 0.14);
+}
+
+.sidebar-link.active {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Action de deconnexion en bas de la sidebar. */
+.sidebar-logout {
+  width: 100%;
+  min-height: 44px;
+  margin-top: auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+/* Etat de survol de la deconnexion. */
+.sidebar-logout:hover {
+  border-color: #f3a7b2;
+  background: rgba(194, 65, 84, 0.25);
+}
+
+/* Zone principale qui absorbe l'espace restant. */
+.app-main {
+  min-width: 0;
+  flex: 1;
+  padding: clamp(24px, 4vw, 52px);
+  background: var(--page);
+}
+
+/* En-tete commun des pages de travail. */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* Titre principal des pages protegees. */
+.page-header h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  letter-spacing: -0.04em;
+}
+
+/* Description secondaire des pages protegees. */
+.page-header p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+/* Grille responsive des indicateurs du tableau de bord. */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Surface individuelle d'un indicateur. */
+.stat-card,
+.project-card,
+.empty-state {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* Carte de statistique compacte et lisible. */
+.stat-card {
+  padding: 22px;
+}
+
+/* Libelle de statistique en capitales discretes. */
+.stat-card span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Valeur mise en avant dans une statistique. */
+.stat-card strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--text);
+  font-size: 2rem;
+}
+
+/* Grille des projets avec adaptation automatique de largeur. */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+/* Carte projet utilisee dans la vue de liste. */
+.project-card {
+  padding: 22px;
+  border-top: 4px solid var(--accent);
+}
+
+/* Nom du projet dans sa carte. */
+.project-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+/* Description du projet dans sa carte. */
+.project-card p {
+  min-height: 48px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* Etat vide ou contenu d'attente des prochaines fonctionnalites. */
+.empty-state {
+  padding: 34px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Espace vertical standard entre les blocs du dashboard. */
+.section-gap {
+  margin-top: 22px;
+}
+
+/* Passage de la connexion en colonne sur tablette et mobile. */
+@media (max-width: 780px) {
+  /* Empile le panneau de marque au-dessus du formulaire. */
+  .auth-page {
+    display: block;
   }
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+  /* Reduit le panneau de bienvenue pour conserver le formulaire visible. */
+  .auth-intro {
+    min-height: 300px;
+    padding: 28px 24px;
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+
+  /* Raccourcit la zone editoriale sur les petits ecrans. */
+  .auth-intro-copy {
+    padding-block: 48px 24px;
+  }
+
+  /* Adapte le titre a la largeur du telephone. */
+  .auth-intro h1 {
+    font-size: clamp(2.1rem, 11vw, 3.2rem);
+  }
+
+  /* Reduit l'espace autour du formulaire mobile. */
+  .auth-panel {
+    align-items: flex-start;
+    padding: 42px 24px 56px;
+  }
+
+  /* Transforme la sidebar verticale en barre mobile. */
+  .app-shell {
+    display: block;
+  }
+
+  /* Compacte la navigation sans retirer ses actions. */
+  .sidebar {
+    width: 100%;
+    padding: 18px 20px;
+  }
+
+  /* Place le nom utilisateur sous la marque. */
+  .sidebar-user {
+    margin: 14px 0 0;
+  }
+
+  /* Autorise les liens a revenir a la ligne. */
+  .sidebar-nav {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+
+  /* Reduit les liens pour les petites largeurs. */
+  .sidebar-link {
+    padding: 9px 11px;
+    font-size: 0.9rem;
+  }
+
+  /* Replace la deconnexion dans le flux de la barre mobile. */
+  .sidebar-logout {
+    width: auto;
+    margin-top: 14px;
+    padding: 0 16px;
+  }
+
+  /* Donne au bouton de theme une largeur naturelle sur mobile. */
+  .sidebar-theme-toggle {
+    width: fit-content;
+  }
+
+  /* Retire le surplus de padding du contenu mobile. */
+  .app-main {
+    padding: 28px 20px;
+  }
+
+  /* Empile l'en-tete quand la largeur ne permet plus deux colonnes. */
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 24px;
+  }
+
+  /* Empile l'action du dashboard sous son message d'accueil. */
+  .dashboard-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dashboard-button {
+    width: 100%;
+  }
+
+  /* Passe les statistiques sur une seule colonne mobile. */
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Ajustements specifiques aux tres petits telephones. */
+@media (max-width: 420px) {
+  /* Laisse davantage de largeur aux champs. */
+  .auth-panel {
+    padding-inline: 18px;
+  }
+
+  /* Rend le texte secondaire plus compact. */
+  .auth-intro p {
+    font-size: 0.95rem;
   }
 }
