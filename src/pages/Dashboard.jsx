@@ -1,229 +1,95 @@
-import { useState, useEffect, useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { getProjetsParUtilisateur } from "../api/projets";
 import { getToutesLesTaches } from "../api/taches";
 import { calculerStatsGlobales, calculerStatsProjet } from "../utils/statistiques";
 
-/**
- * Composant Dashboard (Tableau de bord)
- * 
- * Vue principale affichant la synthèse de l'activité de l'utilisateur :
- * - Cartes d'indicateurs clés (KPIs : total projets, tâches, statuts, progression)
- * - Barres de progression de l'avancement par projet
- * - Liste des tâches prioritaires et urgentes à traiter
- */
+const libelleStatut = { a_faire: "À faire", en_cours: "En cours", terminee: "Terminée" };
+const libellePriorite = { basse: "Basse", moyenne: "Moyenne", haute: "Haute" };
+
 export const Dashboard = () => {
-
-  // --- ÉTATS & CONTEXTES ---
   const { utilisateur } = useContext(AuthContext);
-
   const [projets, setProjets] = useState([]);
   const [taches, setTaches] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
 
-
-  // --- CHARGEMENT DES DONNÉES DU DASHBOARD ---
   useEffect(() => {
-    const chargerDonneesDashboard = async () => {
-      if (!utilisateur) return;
-
+    const charger = async () => {
+      if (!utilisateur?.id) return;
       try {
         setChargement(true);
-        setErreur(null);
-
-        // Récupération simultanée des projets de l'utilisateur et de l'ensemble des tâches
-        const [donneesProjets, donneesTaches] = await Promise.all([
-          getProjetsParUtilisateur(utilisateur.id),
-          getToutesLesTaches(),
-        ]);
-
-        // Filtrer les tâches appartenant uniquement aux projets de l'utilisateur
-        const idsProjetsUser = donneesProjets.map((p) => p.id);
-        const tachesUtilisateur = donneesTaches.filter((t) =>
-          idsProjetsUser.includes(Number(t.projetId))
-        );
-
+        const [donneesProjets, donneesTaches] = await Promise.all([getProjetsParUtilisateur(utilisateur.id), getToutesLesTaches()]);
+        const ids = new Set(donneesProjets.map((projet) => String(projet.id)));
         setProjets(donneesProjets);
-        setTaches(tachesUtilisateur);
-
+        setTaches(donneesTaches.filter((tache) => ids.has(String(tache.projetId))));
       } catch (err) {
-        setErreur(err.message);
+        setErreur(err.message || "Impossible de charger le tableau de bord.");
       } finally {
         setChargement(false);
       }
     };
+    charger();
+  }, [utilisateur?.id]);
 
-    chargerDonneesDashboard();
-  }, [utilisateur]);
-
-
-  // --- ÉTATS D'AFFICHAGE (Chargement & Erreur) ---
   if (chargement) return <p>Chargement du tableau de bord...</p>;
-  if (erreur) return <p style={{ color: "var(--danger)" }}>Erreur : {erreur}</p>;
+  if (erreur) return <p role="alert" style={{ color: "var(--danger)" }}>Erreur : {erreur}</p>;
 
-
-  // --- CALCUL DES STATISTIQUES GLOBALES ---
   const stats = calculerStatsGlobales(projets, taches);
-
+  const recentes = [...taches].sort((a, b) => new Date(b.creeLe) - new Date(a.creeLe)).slice(0, 5);
+  const maximum = Math.max(stats.aFaire, stats.enCours, stats.terminees, 1);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "25px" }}>
-
-      {/* --- EN-TÊTE DU DASHBOARD --- */}
-      <div className="dashboard-heading">
+    <div className="dashboard-page">
+      <header className="dashboard-heading">
         <div>
-          <h2 style={{ margin: "0 0 5px 0" }}>
-            Ravi de vous revoir, {utilisateur?.prenom || utilisateur?.nom || "Utilisateur"} 👋
-          </h2>
-          <p style={{ color: "var(--muted)", margin: 0 }}>
-            Voici un aperçu de vos projets et de l'avancement de vos tâches.
-          </p>
+          <h1>Tableau de bord</h1>
+          <p>Bonjour {utilisateur?.prenom || utilisateur?.nom || "!"}, voici l'état de vos projets.</p>
         </div>
+        <Link className="dashboard-button" to="/projets?nouveau=1"><span aria-hidden="true">+</span> Nouveau projet</Link>
+      </header>
 
-        <Link className="dashboard-button" to="/projets">
-          Voir mes projets <span aria-hidden="true">→</span>
-        </Link>
-      </div>
+      <section className="dashboard-kpis" aria-label="Indicateurs clés">
+        <CarteStat title="Projets" value={stats.totalProjets} detail={`${projets.filter((projet) => taches.some((tache) => String(tache.projetId) === String(projet.id) && tache.statut !== "terminee")).length} actifs`} color="#2d7c82" />
+        <CarteStat title="Total tâches" value={stats.totalTaches} detail="tous projets confondus" color="#e08a4a" />
+        <CarteStat title="En cours" value={stats.enCours} detail="à terminer bientôt" color="#d98252" />
+        <CarteStat title="Terminées" value={stats.terminees} detail={`${stats.pourcentageGlobal}% du total`} color="#3b9b78" />
+      </section>
 
-
-      {/* --- SECTION 1 : CARTES D'INDICATEURS (KPIs) --- */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "15px",
-        }}
-      >
-        <CarteStat title="Total Projets" value={stats.totalProjets} color="#2d7c82" />
-        <CarteStat title="Total Tâches" value={stats.totalTaches} color="#e08a4a" />
-        <CarteStat title="À faire" value={stats.aFaire} color="#7a8c8d" />
-        <CarteStat title="En cours" value={stats.enCours} color="#d98252" />
-        <CarteStat title="Terminées" value={stats.terminees} color="#3b9b78" />
-        <CarteStat title="Progression Globale" value={`${stats.pourcentageGlobal}%`} color="#e26652" />
-      </div>
-
-
-      {/* --- SECTION 2 : AVANCEMENT DES PROJETS & URGENCES --- */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
-
-        {/* Bloc 2.1 : Progression projet par projet */}
-        <div style={{ background: "var(--surface)", padding: "20px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <h3 style={{ marginTop: 0, marginBottom: "15px" }}>Avancement des Projets</h3>
-
-          {projets.length === 0 ? (
-            <p style={{ color: "var(--muted)" }}>Aucun projet disponible.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-              {projets.map((projet) => {
-                const tachesDuProjet = taches.filter((t) => Number(t.projetId) === projet.id);
-                const { total, pourcentage } = calculerStatsProjet(tachesDuProjet);
-
-                return (
-                  <div key={projet.id}>
-                    
-                    {/* Nom du projet et ratio de progression */}
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", marginBottom: "5px" }}>
-                      <Link to={`/projets/${projet.id}`} style={{ textDecoration: "none", color: "var(--text)", fontWeight: "bold" }}>
-                        {projet.nom}
-                      </Link>
-                      <span style={{ color: "var(--muted)" }}>{pourcentage}% ({total} tâches)</span>
-                    </div>
-
-                    {/* Barre de progression visuelle */}
-                    <div style={{ width: "100%", background: "var(--track)", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
-                      <div
-                        style={{
-                          width: `${pourcentage}%`,
-                          background: projet.couleur || "#2d7c82",
-                          height: "100%",
-                          transition: "width 0.3s ease",
-                        }}
-                      />
-                    </div>
-
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      <section className="dashboard-panels">
+        <div className="dashboard-panel">
+          <h2>Répartition des tâches par statut</h2>
+          <div className="status-chart">
+            {[['a_faire', stats.aFaire], ['en_cours', stats.enCours], ['terminee', stats.terminees]].map(([statut, valeur]) => (
+              <div className="status-bar" key={statut}>
+                <strong>{valeur}</strong>
+                <span className={`status-bar-fill ${statut}`} style={{ height: `${(valeur / maximum) * 118}px` }} />
+                <small>{libelleStatut[statut]}</small>
+              </div>
+            ))}
+          </div>
         </div>
-
-
-        {/* Bloc 2.2 : Liste des Tâches Urgentes / Prioritaires */}
-        <div style={{ background: "var(--surface)", padding: "20px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <h3 style={{ marginTop: 0, marginBottom: "15px" }}>Tâches Prioritaires / Urgentes</h3>
-
-          {stats.tachesUrgentes.length === 0 ? (
-            <p style={{ color: "var(--muted)" }}>Aucune tâche urgente à traiter.</p>
-          ) : (
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
-              {stats.tachesUrgentes.map((tache) => (
-                <li
-                  key={tache.id}
-                  style={{
-                    padding: "10px",
-                    border: "1px solid var(--border)",
-                    borderRadius: "6px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  {/* Détails de la tâche */}
-                  <div>
-                    <strong style={{ display: "block", fontSize: "14px" }}>{tache.titre}</strong>
-                    <small style={{ color: "var(--muted)" }}>Échéance : {tache.echeance}</small>
-                  </div>
-
-                  {/* Badge de priorité */}
-                  <span
-                    style={{
-                      padding: "3px 8px",
-                      borderRadius: "4px",
-                      fontSize: "11px",
-                      textTransform: "uppercase",
-                      fontWeight: "bold",
-                      color: "#FFF",
-                      background: tache.priorite === "haute" ? "#c44f5a" : tache.priorite === "moyenne" ? "#d98252" : "#7a8c8d",
-                    }}
-                  >
-                    {tache.priorite}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="dashboard-panel">
+          <h2>Avancement par projet</h2>
+          <div className="project-progress-list">
+            {projets.map((projet) => {
+              const statistiques = calculerStatsProjet(taches.filter((tache) => String(tache.projetId) === String(projet.id)));
+              return <div key={projet.id} className="project-progress"><div><Link to={`/projets/${projet.id}`}>{projet.nom}</Link><span>{statistiques.pourcentage}%</span></div><i><b style={{ width: `${statistiques.pourcentage}%`, background: projet.couleur || "var(--accent)" }} /></i></div>;
+            })}
+          </div>
         </div>
+      </section>
 
-      </div>
-
+      <section className="dashboard-panel dashboard-recent">
+        <div className="dashboard-section-title"><h2>Tâches récentes</h2><Link to="/projets">Voir les projets</Link></div>
+        {recentes.length === 0 ? <p className="muted">Aucune tâche à afficher.</p> : <div className="table-scroll"><table><thead><tr><th>Tâche</th><th>Projet</th><th>Priorité</th><th>Échéance</th><th>Statut</th></tr></thead><tbody>{recentes.map((tache) => {
+          const projet = projets.find((item) => String(item.id) === String(tache.projetId));
+          return <tr key={tache.id}><td><Link to={`/projets/${tache.projetId}`}>{tache.titre}</Link></td><td>{projet?.nom || "—"}</td><td><span className={`priority-badge ${tache.priorite}`}>{libellePriorite[tache.priorite]}</span></td><td>{tache.echeance?.split("-").reverse().join("/") || "—"}</td><td><span className={`status-badge ${tache.statut}`}>{libelleStatut[tache.statut]}</span></td></tr>;
+        })}</tbody></table></div>}
+      </section>
     </div>
   );
 };
 
-
-/**
- * Composant Interne : CarteStat
- * Rendu réutilisable d'une carte d'indicateur KPI
- */
-
-const CarteStat = ({ title, value, color }) => (
-  <div
-    style={{
-      background: "var(--surface)",
-      padding: "15px",
-      borderRadius: "8px",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-      borderTop: `4px solid ${color}`,
-    }}
-  >
-    <span style={{ fontSize: "12px", color: "var(--muted)", textTransform: "uppercase", fontWeight: "bold" }}>
-      {title}
-    </span>
-    <p style={{ fontSize: "24px", fontWeight: "bold", margin: "5px 0 0 0", color: "var(--text)" }}>
-      {value}
-    </p>
-  </div>
-);
+const CarteStat = ({ title, value, detail, color }) => <article className="dashboard-stat" style={{ borderTopColor: color }}><span>{title}</span><strong style={{ color }}>{value}</strong><small>{detail}</small></article>;

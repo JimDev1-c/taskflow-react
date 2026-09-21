@@ -65,13 +65,15 @@ export const useTaches = (projetId) => {
    */
 
   const creer = async (nouvelleTache) => {
-    await ajouterTache({
+    // L'identifiant peut être une chaîne générée par JSON Server : ne jamais le convertir en nombre.
+    const tacheCreee = await ajouterTache({
       ...nouvelleTache,
-      projetId: Number(projetId),
+      projetId,
       creeLe: new Date().toISOString().split("T")[0],
       modifieLe: new Date().toISOString().split("T")[0],
     });
-    chargerTaches();
+    await chargerTaches();
+    return tacheCreee;
   };
 
   /**

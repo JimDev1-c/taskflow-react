@@ -1,8 +1,9 @@
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Récupérer les tâches d'un projet
 export const getTachesParProjet = async (projetId) => {
-  const reponse = await fetch(`${API_URL}/taches?projetId=${projetId}`);
+  const parametres = new URLSearchParams({ projetId: String(projetId) });
+  const reponse = await fetch(`${API_URL}/taches?${parametres}`);
   if (!reponse.ok) throw new Error("Impossible de charger les tâches du projet.");
   return reponse.json();
 };

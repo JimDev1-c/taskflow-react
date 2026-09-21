@@ -14,7 +14,7 @@ import { Link } from "react-router-dom";
  * @param {string} [props.projet.couleur] - Code couleur (ex: Hex/RGB) pour personnaliser la bordure supérieure
  */
 
-export const CarteProjet = ({ projet }) => {
+export const CarteProjet = ({ projet, totalTaches = 0, pourcentage = 0, onModifier, onSupprimer }) => {
   return (
     <article 
       className="project-card" 
@@ -29,10 +29,25 @@ export const CarteProjet = ({ projet }) => {
       {/* Description du projet */}
       <p>{projet.description}</p>
 
-      {/* Lien de redirection vers la page détaillée du projet */}
-      <Link to={`/projets/${projet.id}`}>
-        Ouvrir le projet
-      </Link>
+      <div className="project-card-progress" aria-label={`${pourcentage}% des tâches terminées`}>
+        <span>{totalTaches} tâche{totalTaches > 1 ? "s" : ""}</span>
+        <strong>{pourcentage}%</strong>
+      </div>
+      <div className="project-card-track" aria-hidden="true">
+        <span style={{ width: `${pourcentage}%`, backgroundColor: projet.couleur || "var(--accent)" }} />
+      </div>
+
+      <div className="project-card-actions">
+        <Link className="button button-secondary button-compact" to={`/projets/${projet.id}`}>
+          Ouvrir
+        </Link>
+        <button className="button button-secondary button-compact" type="button" onClick={() => onModifier(projet)}>
+          Modifier
+        </button>
+        <button className="button button-danger button-compact" type="button" onClick={() => onSupprimer(projet)}>
+          Supprimer
+        </button>
+      </div>
 
     </article>
   );

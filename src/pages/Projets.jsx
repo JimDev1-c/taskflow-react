@@ -1,139 +1,145 @@
-// ============================================================================
-// COMPOSANT : Projets
-// Rôle : Page privée permettant d'afficher l'ensemble des projets de l'utilisateur.
-// Contient la gestion des états asynchrones (chargement, succès, erreur)
-// et l'annulation des requêtes HTTP obsolètes.
-// ============================================================================
-
 import { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { getProjetsParUtilisateur } from "../api/projets";
+import { ajouterProjet, getProjetsParUtilisateur, modifierProjet, supprimerProjet } from "../api/projets";
+import { getToutesLesTaches, supprimerTache } from "../api/taches";
 import { CarteProjet } from "../components/CarteProjet";
+import { Modale } from "../components/Modale";
+import { calculerStatsProjet } from "../utils/statistiques";
+
+const PROJET_VIDE = { nom: "", description: "", couleur: "#2d7c82" };
 
 export const Projets = () => {
-    // ------------------------------------------------------------------------
-    // 1. EXTRACTION DU CONTEXTE D'AUTHENTIFICATION
-    // Récupération des données globales de l'utilisateur actuellement connecté.
-    // ------------------------------------------------------------------------
-    const { utilisateur } = useContext(AuthContext);
+  const { utilisateur } = useContext(AuthContext);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [projets, setProjets] = useState([]);
+  const [taches, setTaches] = useState([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(null);
+  const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [projetEnEdition, setProjetEnEdition] = useState(null);
+  const [formulaire, setFormulaire] = useState(PROJET_VIDE);
+  const [enregistrement, setEnregistrement] = useState(false);
 
-    // ------------------------------------------------------------------------
-    // 2. ÉTATS LOCAUX (REACT STATE)
-    // - projets : Stocke la liste finale récupérée depuis l'API backend.
-    // - chargement : Indicateur visuel pour l'expérience utilisateur (Loader/Spinner).
-    // - erreur : Stocke le message d'erreur si l'appel réseau échoue.
-    // ------------------------------------------------------------------------
-    const [projets, setProjets] = useState([]);
-    const [chargement, setChargement] = useState(true);
-    const [erreur, setErreur] = useState(null);
+  const chargerProjets = async (signal) => {
+    if (!utilisateur?.id) return;
+    setChargement(true);
+    setErreur(null);
+    try {
+      const [donneesProjets, donneesTaches] = await Promise.all([
+        getProjetsParUtilisateur(utilisateur.id, { signal }),
+        getToutesLesTaches(),
+      ]);
+      setProjets(donneesProjets || []);
+      const ids = new Set((donneesProjets || []).map((projet) => String(projet.id)));
+      setTaches((donneesTaches || []).filter((tache) => ids.has(String(tache.projetId))));
+    } catch (err) {
+      if (err.name !== "AbortError") setErreur(err.message || "Impossible de charger vos projets.");
+    } finally {
+      if (!signal?.aborted) setChargement(false);
+    }
+  };
 
-    // ------------------------------------------------------------------------
-    // 3. EFFET DE BORD (USEEFFECT) : CHARGEMENT ASYNCHRONE DES DONNÉES
-    // S'exécute au montage du composant ou dès que 'utilisateur.id' change.
-    // ------------------------------------------------------------------------
-    useEffect(() => {
-        // Flag de sécurité : évite de mettre à jour l'état si le composant est démonté
-        let estMonte = true;
+  useEffect(() => {
+    const controller = new AbortController();
+    chargerProjets(controller.signal);
+    return () => controller.abort();
+  }, [utilisateur?.id]);
 
-        // Contrôleur JS natif pour annuler la requête HTTP si le composant est démonté avant la fin
-        const controller = new AbortController();
+  useEffect(() => {
+    if (searchParams.get("nouveau") === "1") {
+      setProjetEnEdition(null);
+      setFormulaire(PROJET_VIDE);
+      setModaleOuverte(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
-        const chargerProjets = async () => {
-            // Guard clause : On s'assure d'avoir un identifiant utilisateur valide
-            if (!utilisateur?.id) return;
+  const ouvrirCreation = () => {
+    setProjetEnEdition(null);
+    setFormulaire(PROJET_VIDE);
+    setModaleOuverte(true);
+  };
 
-            try {
-                // Initialisation des états avant le lancement de la promesse
-                setChargement(true);
-                setErreur(null);
+  const ouvrirEdition = (projet) => {
+    setProjetEnEdition(projet);
+    setFormulaire({ nom: projet.nom, description: projet.description || "", couleur: projet.couleur || "#2d7c82" });
+    setModaleOuverte(true);
+  };
 
-                // Appel à la couche d'abstraction API (dossier ../api)
-                const donnees = await getProjetsParUtilisateur(utilisateur.id, { signal: controller.signal });
-                
-                // Mise à jour de l'état uniquement si le composant est toujours affiché
-                if (estMonte) {
-                    setProjets(donnees || []);
-                }
-            } catch (err) {
-                // Gestion des erreurs : On ignore l'annulation explicite (AbortError)
-                if (estMonte && err.name !== "AbortError") {
-                    setErreur(err.message || "Impossible de charger vos projets.");
-                }
-            } finally {
-                // La phase de chargement prend fin dans tous les cas
-                if (estMonte) {
-                    setChargement(false);
-                }
-            }
-        };
+  const enregistrerProjet = async (event) => {
+    event.preventDefault();
+    setEnregistrement(true);
+    setErreur(null);
+    try {
+      if (projetEnEdition) {
+        await modifierProjet(projetEnEdition.id, formulaire);
+      } else {
+        await ajouterProjet({ ...formulaire, utilisateurId: utilisateur.id, creeLe: new Date().toISOString().slice(0, 10) });
+      }
+      setModaleOuverte(false);
+      await chargerProjets();
+    } catch (err) {
+      setErreur(err.message || "Une erreur est survenue lors de l'enregistrement.");
+    } finally {
+      setEnregistrement(false);
+    }
+  };
 
-        chargerProjets();
+  const effacerProjet = async (projet) => {
+    if (!window.confirm(`Supprimer « ${projet.nom} » et toutes ses tâches ? Cette action est irréversible.`)) return;
+    try {
+      const tachesDuProjet = taches.filter((tache) => String(tache.projetId) === String(projet.id));
+      await Promise.all(tachesDuProjet.map((tache) => supprimerTache(tache.id)));
+      await supprimerProjet(projet.id);
+      await chargerProjets();
+    } catch (err) {
+      setErreur(err.message || "Impossible de supprimer le projet.");
+    }
+  };
 
-        // CLEANUP FUNCTION : S'exécute au démontage du composant
-        return () => {
-            estMonte = false;
-            controller.abort(); // Interrompt la requête réseau en cours
-        };
-    }, [utilisateur?.id]); // Dépendance : Se déclenche de nouveau si l'ID utilisateur change
+  return (
+    <section className="projets-page">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Organisation</p>
+          <h1>Mes projets</h1>
+          <p>{projets.length} projet{projets.length > 1 ? "s" : ""} — {taches.length} tâche{taches.length > 1 ? "s" : ""} au total</p>
+        </div>
+        <button className="button button-primary" type="button" onClick={ouvrirCreation}><span aria-hidden="true">+</span> Nouveau projet</button>
+      </header>
 
-    // ------------------------------------------------------------------------
-    // 4. RENDU JSX (INTERFACE UTILISATEUR)
-    // Utilité : Structure sémantique avec rendu conditionnel selon l'état réseau.
-    // ------------------------------------------------------------------------
-    return (
-        <section className="projets-page">
-            {/* EN-TÊTE DE LA PAGE */}
-            <header className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
-                <div>
-                    <p className="eyebrow">Organisation</p>
-                    <h1>Mes projets</h1>
-                    <p>Retrouvez vos espaces de travail en un coup d'œil.</p>
-                </div>
-                {/* Action principale : Navigation vers la création d'un projet */}
-                <Link to="/projets/nouveau" className="button button-primary">
-                    <span aria-hidden="true">+</span> Nouveau projet
-                </Link>
-            </header>
+      {chargement && <div className="empty-state">Chargement de vos projets en cours...</div>}
+      {erreur && <div className="empty-state error-state" role="alert">Erreur : {erreur}</div>}
+      {!chargement && !erreur && projets.length === 0 && (
+        <div className="empty-state project-empty-state">
+          <p>Aucun projet n'est disponible pour le moment.</p>
+          <button className="button button-primary" type="button" onClick={ouvrirCreation}>Créer mon premier projet</button>
+        </div>
+      )}
+      {!chargement && !erreur && projets.length > 0 && (
+        <div className="project-grid">
+          {projets.map((projet) => {
+            const tachesDuProjet = taches.filter((tache) => String(tache.projetId) === String(projet.id));
+            const { total, pourcentage } = calculerStatsProjet(tachesDuProjet);
+            return <CarteProjet key={projet.id} projet={projet} totalTaches={total} pourcentage={pourcentage} onModifier={ouvrirEdition} onSupprimer={effacerProjet} />;
+          })}
+        </div>
+      )}
 
-            {/* CAS 1 : ÉTAT DE CHARGEMENT */}
-            {chargement && (
-                <div className="empty-state">Chargement de vos projets en cours...</div>
-            )}
+      <footer className="page-footer"><Link to="/dashboard" className="button button-secondary"><span aria-hidden="true">←</span> Retour au tableau de bord</Link></footer>
 
-            {/* CAS 2 : ÉTAT D'ERREUR (Sémantique 'role="alert"' pour l'accessibilité) */}
-            {erreur && (
-                <div className="empty-state error-state" role="alert" style={{ color: "var(--danger)" }}>
-                    Erreur : {erreur}
-                </div>
-            )}
-
-            {/* CAS 3 : LISTE VIDE (Succès mais aucun projet retourné) */}
-            {!chargement && !erreur && projets.length === 0 && (
-                <div className="empty-state" style={{ textAlign: "center", padding: "3rem", background: "var(--surface)", borderRadius: "8px" }}>
-                    <p>Aucun projet n'est disponible pour le moment.</p>
-                    <p style={{ marginTop: "10px", color: "var(--muted)" }}>
-                        Commencez par créer votre premier projet pour organiser vos tâches.
-                    </p>
-                </div>
-            )}
-
-            {/* CAS 4 : AFFICHAGE DES DONNÉES (Rendu de la grille de composants) */}
-            {!chargement && !erreur && projets.length > 0 && (
-                <div className="project-grid">
-                    {/* Itération sur la liste avec attribution de la clé unique mandatory 'key' */}
-                    {projets.map((projet) => (
-                        <CarteProjet key={projet.id} projet={projet} />
-                    ))}
-                </div>
-            )}
-
-            {/* PIED DE PAGE ET NAVIGATION SECONDAIRE */}
-            <footer style={{ marginTop: "2rem" }}>
-                <Link to="/dashboard" className="button button-secondary">
-                    <span aria-hidden="true">←</span> Retour au tableau de bord
-                </Link>
-            </footer>
-        </section>
-    );
+      <Modale estOuverte={modaleOuverte} onFermer={() => setModaleOuverte(false)} titre={projetEnEdition ? "Modifier le projet" : "Nouveau projet"}>
+        <form className="project-form" onSubmit={enregistrerProjet}>
+          <label htmlFor="projet-nom">Nom du projet</label>
+          <input id="projet-nom" value={formulaire.nom} onChange={(event) => setFormulaire((ancien) => ({ ...ancien, nom: event.target.value }))} required />
+          <label htmlFor="projet-description">Description</label>
+          <textarea id="projet-description" rows="4" value={formulaire.description} onChange={(event) => setFormulaire((ancien) => ({ ...ancien, description: event.target.value }))} />
+          <label htmlFor="projet-couleur">Couleur</label>
+          <input id="projet-couleur" type="color" value={formulaire.couleur} onChange={(event) => setFormulaire((ancien) => ({ ...ancien, couleur: event.target.value }))} />
+          <button className="button button-primary" type="submit" disabled={enregistrement}>{enregistrement ? "Enregistrement..." : "Enregistrer le projet"}</button>
+        </form>
+      </Modale>
+    </section>
+  );
 };
